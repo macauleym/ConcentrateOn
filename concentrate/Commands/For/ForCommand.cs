@@ -18,7 +18,10 @@ public class ForCommand(IForLogically logically) {
 
     async Task ForHandler(ParseResult parsed)
     {
-        var request     = GetRequestParams(parsed);
+        var request = GetRequestParams(parsed);
+
+        await logically.BeginAsync();
+        
         var possibleDay = logically.ParsePossibleDayOfWeek(request.Day);
         if (!possibleDay.HasValue)
         {
@@ -26,9 +29,11 @@ public class ForCommand(IForLogically logically) {
             return;
         }
 
-        var desiredDay = await logically.GetDayByNameAsync(possibleDay);
+        var desiredDay = logically.GetDayByName(possibleDay);
         Console.WriteLine(
-             await logically.ComposeDaySubjectsStringAsync(desiredDay));
+             logically.ComposeDaySubjectsString(desiredDay));
+
+        await logically.EndAsync();
     }
 
     public Command Create()

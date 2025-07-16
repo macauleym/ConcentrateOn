@@ -45,44 +45,44 @@ public class ForLogicTests
     }
     
     [Fact]
-    public async Task CanGetDayByName()
+    public void CanGetDayByName()
     {
         // Arrange
         var day      = DayOfWeek.Friday;
         var expected = new Day(Guid.Empty, day, []);
 
         daysContextMock.Setup(m => m
-            .GetByAsync(day.ToString()))
-            .ReturnsAsync(expected);
+            .TryFind(day.ToString()))
+            .Returns(expected);
         
         var testTarget = new ForLogic(subjectContextMock.Object, daysContextMock.Object);
         
         // Act
-        var actual = await testTarget.GetDayByNameAsync(day);
+        var actual = testTarget.GetDayByName(day);
         
         // Assert
         actual.Should().Be(expected);
     }
 
     [Fact]
-    public async Task CannotGetDayByNull()
+    public void CannotGetDayByNull()
     {
         // Arrange
         daysContextMock.Setup(m => m
-            .GetByAsync(null))
-            .ReturnsAsync((Day?)null);
+            .TryFind(string.Empty))
+            .Returns((Day?)null);
         
         var testTarget = new ForLogic(subjectContextMock.Object, daysContextMock.Object);
         
         // Act
-        var actual = await testTarget.GetDayByNameAsync(null);
+        var actual = testTarget.GetDayByName(null);
         
         // Assert
         actual.Should().BeNull();
     }
 
     [Fact]
-    public async Task BuildsOutputStringOfSubjectsForDay()
+    public void BuildsOutputStringOfSubjectsForDay()
     {
         // Arrange
         var subject1 = new Subject(Guid.NewGuid(), "Testing1", 1, During.Morning, "30m");
@@ -96,23 +96,23 @@ public class ForLogicTests
             + "*****************************\n";
 
         subjectContextMock.Setup(m => m
-            .GetByAsync(subject1.Id))
-            .ReturnsAsync(subject1);
+            .TryFind(subject1.Id))
+            .Returns(subject1);
         subjectContextMock.Setup(m => m
-            .GetByAsync(subject2.Id))
-            .ReturnsAsync(subject2);
+            .TryFind(subject2.Id))
+            .Returns(subject2);
 
         var testingTarget = new ForLogic(subjectContextMock.Object, daysContextMock.Object); 
         
         // Act
-        var actual = await testingTarget.ComposeDaySubjectsStringAsync(day);
+        var actual = testingTarget.ComposeDaySubjectsString(day);
 
         // Assert
         actual.Should().BeEquivalentTo(expected);
     }
 
     [Fact]
-    public async Task BuildsOutputStringEvenWhenThereAreNoSubjects()
+    public void BuildsOutputStringEvenWhenThereAreNoSubjects()
     {
         // Arrange
         var day      = new Day(Guid.NewGuid(), DayOfWeek.Tuesday, []);
@@ -124,7 +124,7 @@ public class ForLogicTests
         var testingTarget = new ForLogic(subjectContextMock.Object, daysContextMock.Object); 
         
         // Act
-        var actual = await testingTarget.ComposeDaySubjectsStringAsync(day);
+        var actual = testingTarget.ComposeDaySubjectsString(day);
 
         // Assert
         actual.Should().BeEquivalentTo(expected);

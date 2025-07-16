@@ -13,20 +13,20 @@ public class OnLogicTests
     readonly Mock<IContextual<Day>> daysContextMock        = new();
     
     [Fact]
-    public async Task CanGetExistingSubject()
+    public void CanGetExistingSubject()
     {
         // Arrange
         var name    = "Testing";
         var subject = new Subject(Guid.NewGuid(), name, 0, During.Afternoon, "5m");
 
         subjectContextMock.Setup(m => m
-            .GetByAsync(name))
-            .ReturnsAsync(subject);
+            .TryFind(name))
+            .Returns(subject);
 
         var testTarget = new OnLogic(subjectContextMock.Object, daysContextMock.Object);
 
         // Act
-        var actual = await testTarget.TryGetExistingAsync(name);
+        var actual = testTarget.TryGetSubject(name);
 
         // Assert
         actual.Item1.Should().BeTrue();
@@ -34,19 +34,19 @@ public class OnLogicTests
     }
     
     [Fact]
-    public async Task CantGetUnknownSubject()
+    public void CantGetUnknownSubject()
     {
         // Arrange
         var name    = "blah";
 
         subjectContextMock.Setup(m => m
-            .GetByAsync(name))
-            .ReturnsAsync((Subject?)null);
+            .TryFind(name))
+            .Returns((Subject?)null);
 
         var testTarget = new OnLogic(subjectContextMock.Object, daysContextMock.Object);
 
         // Act
-        var actual = await testTarget.TryGetExistingAsync(name);
+        var actual = testTarget.TryGetSubject(name);
 
         // Assert
         actual.Item1.Should().BeFalse();
@@ -54,7 +54,7 @@ public class OnLogicTests
     }
 
     [Fact]
-    public async Task CanUpdateExistingSubject()
+    public void CanUpdateExistingSubject()
     {
         // Arrange
         var guid     = Guid.NewGuid();
@@ -63,24 +63,24 @@ public class OnLogicTests
         var updated  = new Subject(guid, "Testing", 2, During.Night, "2h");
 
         subjectContextMock.Setup(m => m
-            .ResolveAsync(existing))
-            .ReturnsAsync(existing.Id);
+            .Update(existing))
+            .Returns(existing.Id);
 
         var testTarget = new OnLogic(subjectContextMock.Object, daysContextMock.Object);
 
         // Act
-        var actual = await testTarget.UpdateExistingAsync(existing, request);
+        var actual = testTarget.UpdateExistingSubject(existing, request);
 
         // Assert
         actual.Should().Be(existing.Id);
         subjectContextMock.Verify(context => context
-                .ResolveAsync(updated)
+            .Update(updated)
             , Times.Once
             );
     }
     
     [Fact]
-    public async Task CanCreateNewSubject()
+    public void CanCreateNewSubject()
     {
         // Arrange
         var guid     = Guid.NewGuid();
@@ -88,80 +88,85 @@ public class OnLogicTests
         var created  = new Subject(guid, "Testing", 2, During.Night, "2h");
 
         subjectContextMock.Setup(m => m
-            .ResolveAsync(It.IsAny<Subject>()))
-            .ReturnsAsync(created.Id);
+            .Create(It.IsAny<Subject>()))
+            .Returns(created.Id);
 
         var testTarget = new OnLogic(subjectContextMock.Object, daysContextMock.Object);
 
         // Act
-        var actual = await testTarget.CreateNewAsync(request);
+        var actual = testTarget.CreateNewSubject(request);
 
         // Assert
         actual.Should().NotBeEmpty();
         subjectContextMock.Verify(context => context
-                .ResolveAsync(It.IsAny<Subject>())
+            .Create(It.IsAny<Subject>())
             , Times.Once
             );
     }
 
     [Fact]
-    public async Task CanAssociateSubjectWithExistingDays()
+    public void CanAssociateSubjectWithExistingDays()
     {
         // Arrange
-        var targetId   = Guid.NewGuid();
-        var daysString = "Monday,Wednesday";
-        var daysList   = new List<Day>
-        { new (Guid.NewGuid(), DayOfWeek.Monday, [])
-        , new (Guid.NewGuid(), DayOfWeek.Wednesday, [])
+        var targetId    = Guid.NewGuid();
+        var mondayId    = Guid.NewGuid();
+        var wednesdayId = Guid.NewGuid();
+        var daysList    = new List<Day>
+        { new (mondayId, DayOfWeek.Monday, [])
+        , new (wednesdayId, DayOfWeek.Wednesday, [])
+        };
+        var expected    = new List<Day>
+        { new (mondayId, DayOfWeek.Monday, [targetId])
+        , new (wednesdayId, DayOfWeek.Wednesday, [targetId])
         };
 
         daysContextMock.Setup(m => m
-            .GetAllAsync())
-            .ReturnsAsync(daysList);
+            .All())
+            .Returns(daysList);
         daysContextMock.Setup(m => m
-            .GetByAsync(daysList[0].Name.ToString()))
-            .ReturnsAsync(daysList[0]);
+            .TryFind(daysList[0].Name.ToString()))
+            .Returns(daysList[0]);
         daysContextMock.Setup(m => m
-            .GetByAsync(daysList[1].Name.ToString()))
-            .ReturnsAsync(daysList[1]);
+            .TryFind(daysList[1].Name.ToString()))
+            .Returns(daysList[1]);
         
         var testTarget = new OnLogic(subjectContextMock.Object, daysContextMock.Object);
 
         // Act
-        var actual = await testTarget.AssociateDaysAsync(daysString, targetId);
+        var actual = testTarget.AssociateSubjectToDays(targetId, daysList.Select(d => d.Name).ToList());
 
         // Assert
-        actual.Count.Should().Be(0);
+        actual.Count.Should().Be(2);
+        actual.Should().BeEquivalentTo(expected);
     }
     
     [Fact]
-    public async Task CanAssociateSubjectWithNewDays()
+    public void CanAssociateSubjectWithNewDays()
     { 
         // Arrange
         var targetId   = Guid.NewGuid();
-        var daysString = "Tuesday";
         var daysList   = new List<Day>
         { new (Guid.NewGuid(), DayOfWeek.Monday, [])
         , new (Guid.NewGuid(), DayOfWeek.Wednesday, [])
         };
 
         daysContextMock.Setup(m => m
-            .GetAllAsync())
-            .ReturnsAsync(daysList);
+            .All())
+            .Returns(daysList);
         daysContextMock.Setup(m => m
-            .GetByAsync(daysList[0].Name.ToString()))
-            .ReturnsAsync(daysList[0]);
+            .TryFind(daysList[0].Name.ToString()))
+            .Returns(daysList[0]);
         daysContextMock.Setup(m => m
-            .GetByAsync(daysList[1].Name.ToString()))
-            .ReturnsAsync(daysList[1]);
+            .TryFind(daysList[1].Name.ToString()))
+            .Returns(daysList[1]);
         daysContextMock.Setup(m => m
-            .GetByAsync("Tuesday"))
-            .ReturnsAsync((Day?)null);
+            .TryFind("Tuesday"))
+            .Returns((Day?)null);
         
         var testTarget = new OnLogic(subjectContextMock.Object, daysContextMock.Object);
 
         // Act
-        var actual = await testTarget.AssociateDaysAsync(daysString, targetId);
+        var actual = testTarget.AssociateSubjectToDays(targetId, daysList.Select(d => d.Name).ToList());
 
         // Assert
         actual.Count.Should().Be(2);
@@ -169,7 +174,7 @@ public class OnLogicTests
     }
     
     [Fact]
-    public async Task CanRemoveSubjectFromDays()
+    public void CanRemoveSubjectFromDays()
     {
         // Arrange
         var subjectId = Guid.NewGuid();
@@ -183,21 +188,23 @@ public class OnLogicTests
         expectedWednesday.SubjectIds.Clear();
 
         daysContextMock.Setup(m => m
-            .ResolveAsync(complimentDays[0]));
+            .Update(complimentDays[0]));
         daysContextMock.Setup(m => m
-            .ResolveAsync(complimentDays[1]));
+            .Update(complimentDays[1]));
 
         var testingTarget = new OnLogic(subjectContextMock.Object, daysContextMock.Object);
 
         // Act
-        await testingTarget.RemoveUnwantedDaysAsync(complimentDays, subjectId);
+        var actual = testingTarget.UnassociateUnwantedDays(subjectId, complimentDays);
         
         // Assert
         daysContextMock.Verify(context => context
-                .ResolveAsync(expectedMonday)
+            .Update(expectedMonday)
             , Times.Once);
         daysContextMock.Verify(context => context
-                .ResolveAsync(expectedWednesday)
+            .Update(expectedWednesday)
             , Times.Once);
+        
+        actual.Should().BeEquivalentTo(complimentDays);
     }
 }

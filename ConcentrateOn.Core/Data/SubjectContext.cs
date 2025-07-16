@@ -1,74 +1,50 @@
-using System.Text.Json;
 using ConcentrateOn.Core.Interfaces;
 using ConcentrateOn.Core.Models;
 
 namespace ConcentrateOn.Core.Data;
 
-public class SubjectContext(IDataSource source) : IContextual<Subject>
+public class SubjectContext(IDataSource<Subject> subjectData) : IContextual<Subject>
 {
-    /// <summary>
-    /// Returns a Subject by the given Id, or `null` if there isn't one.
-    /// </summary>
-    /// <param name="id">The Id to query by.</param>
-    /// <returns>The matching Subject, or `null` if none exists.</returns>
-    public async Task<Subject?> GetByAsync(Guid id)
+    List<Subject> subjects = [];
+
+    public async Task InitAsync()
     {
-        var text = await source.ReadAsync();
-        if (string.IsNullOrWhiteSpace(text))
-            return null;
-        
-        return JsonSerializer.Deserialize<List<Subject>>(text)
-            !.FirstOrDefault(s => s.Id == id);
+        subjects = await subjectData.ReadAsync();
     }
 
-    public async Task<Subject?> GetByAsync(string name)
-    {
-        var text = await source.ReadAsync();
-        if (string.IsNullOrWhiteSpace(text))
-            return null;
+    public List<Subject> All() =>
+        subjects;
 
-        return JsonSerializer.Deserialize<List<Subject>>(text)
-            !.FirstOrDefault(s => s.Name == name);
+    public Subject? TryFind(Guid id) =>
+        subjects.Find(s => s.Id == id);
+
+    public Subject? TryFind(string name) =>
+        subjects.Find(s => s.Name == name);
+
+    public Guid Create(Subject toCreate)
+    {
+        subjects.Add(toCreate);
+
+        return toCreate.Id;
     }
 
-    public async Task<List<Subject>> GetAllAsync()
+    public Guid Update(Subject toUpdate)
     {
-        var text = await source.ReadAsync();
-        if (string.IsNullOrWhiteSpace(text))
-            return [];
+        var updateIndex       = subjects.FindIndex(s => s.Id == toUpdate.Id);
+        subjects[updateIndex] = toUpdate;
 
-        return JsonSerializer.Deserialize<List<Subject>>(text)!;
+        return toUpdate.Id;
     }
 
-    public async Task<Guid> ResolveAsync(Subject target)
+    public void Remove(Guid id)
     {
-        var allSubjects = await GetAllAsync();
-        var existing    = allSubjects.Find(s => s.Id == target.Id);
-        if (existing is null)
-            allSubjects.Add(target);
-        else
-        {
-            var updated = new Subject(
-                  existing.Id
-                , existing.Name
-                , target.Priority
-                , target.During
-                , target.Duration
-                );
-            var updateIndex          = allSubjects.FindIndex(s => s.Id == updated.Id);
-            allSubjects[updateIndex] = updated;
-        }
-        
-        await source.WriteAsync(JsonSerializer.Serialize(allSubjects));
-
-        return target.Id;
+        var targetIndex = subjects.FindIndex(s => s.Id == id);
+        if (targetIndex >= 0) 
+            subjects.RemoveAt(targetIndex);
     }
 
-    public async Task DeleteAsync(Guid id)
+    public async Task SaveAsync()
     {
-        var allItems = await GetAllAsync();
-        var target   = allItems.Find(s => s.Id == id);
-        if (target is not null)
-            allItems.Remove(target);
+        await subjectData.WriteAsync(subjects);
     }
 }

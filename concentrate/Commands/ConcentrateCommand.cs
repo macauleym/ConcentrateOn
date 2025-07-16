@@ -1,7 +1,6 @@
 using System.CommandLine;
 using concentrate.Commands.For;
 using concentrate.Commands.On;
-using ConcentrateOn.Core.Data;
 using ConcentrateOn.Core.Interfaces;
 using ConcentrateOn.Core.Logic;
 using ConcentrateOn.Core.Models;

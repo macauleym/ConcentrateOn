@@ -1,7 +1,7 @@
 namespace ConcentrateOn.Core.Data;
 
-public interface IDataSource
+public interface IDataSource<T>
 {
-    Task<string> ReadAsync();
-    Task WriteAsync(string content);
+    Task<List<T>> ReadAsync();
+    Task WriteAsync(List<T> content);
 }

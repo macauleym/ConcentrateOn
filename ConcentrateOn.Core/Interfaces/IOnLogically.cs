@@ -2,15 +2,11 @@ using ConcentrateOn.Core.Models;
 
 namespace ConcentrateOn.Core.Interfaces;
 
-public interface IOnLogically
+public interface IOnLogically : ITransactable
 {
-    Task<(bool, Subject?)> TryGetExistingAsync(string name);
-
-    Task<Guid> UpdateExistingAsync(Subject existing, OnRequest request);
-
-    Task<Guid> CreateNewAsync(OnRequest request);
-
-    Task<List<Day>> AssociateDaysAsync(string days, Guid subjectId);
-
-    Task RemoveUnwantedDaysAsync(List<Day> complimentDays, Guid subjectId);
+    (bool, Subject?) TryGetSubject(string name);
+    Guid UpdateExistingSubject(Subject existing, OnRequest request);
+    Guid CreateNewSubject(OnRequest fromRequest);
+    List<Day> AssociateSubjectToDays(Guid subjectId, List<DayOfWeek> givenDays);
+    List<Day> UnassociateUnwantedDays(Guid subjectId, List<Day> complimentDays);
 }

@@ -9,7 +9,12 @@ public class ForLogic(
 , IContextual<Day> dayContext
 ) : IForLogically 
 {
-  const string OUTPUT_SEPERATOR = "*****************************"; 
+  const string OUTPUT_SEPERATOR = "*****************************";
+
+  public Task BeginAsync() => Task.WhenAll(
+      subjectContext.InitAsync()
+    , dayContext.InitAsync()
+    );
 
   public DayOfWeek? ParsePossibleDayOfWeek(string requested)
   {
@@ -26,10 +31,10 @@ public class ForLogic(
     return desiredDay;
   }
 
-  public Task<Day?> GetDayByNameAsync(DayOfWeek? possibleDay) =>
-    dayContext.GetByAsync(possibleDay?.ToString());
+  public Day? GetDayByName(DayOfWeek? possibleDay) =>
+    dayContext.TryFind(possibleDay?.ToString() ?? string.Empty);
   
-  public async Task<string> ComposeDaySubjectsStringAsync(Day? desiredDay)
+  public string ComposeDaySubjectsString(Day? desiredDay)
   {
     var subjectsBuilder = new StringBuilder();
     subjectsBuilder.AppendLine(OUTPUT_SEPERATOR);
@@ -39,7 +44,7 @@ public class ForLogic(
       subjectsBuilder.AppendLine($"Desired Subjects for {desiredDay.Name}");
       for (var i = 0; i < desiredDay.SubjectIds.Count; i++)
       {
-        var subject = await subjectContext.GetByAsync(desiredDay.SubjectIds[i]);
+        var subject = subjectContext.TryFind(desiredDay.SubjectIds[i]);
         if (subject is not null)
           subjectsBuilder.AppendLine($"\t{i + 1}. {subject.Name} - {subject.During}, {subject.Duration}");
       }
@@ -51,4 +56,9 @@ public class ForLogic(
 
     return subjectsBuilder.ToString();
   }
+
+  public Task EndAsync() => Task.WhenAll(
+      subjectContext.SaveAsync()
+    , dayContext.SaveAsync()
+    );
 }

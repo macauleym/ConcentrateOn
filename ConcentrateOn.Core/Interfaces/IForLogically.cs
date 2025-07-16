@@ -2,9 +2,9 @@ using ConcentrateOn.Core.Models;
 
 namespace ConcentrateOn.Core.Interfaces;
 
-public interface IForLogically
+public interface IForLogically : ITransactable
 {
     DayOfWeek? ParsePossibleDayOfWeek(string requested);
-    Task<Day?> GetDayByNameAsync(DayOfWeek? possibleDay);
-    Task<string> ComposeDaySubjectsStringAsync(Day? desiredDay);
+    Day? GetDayByName(DayOfWeek? possibleDay);
+    string ComposeDaySubjectsString(Day? desiredDay);
 }

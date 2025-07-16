@@ -7,17 +7,22 @@ namespace ConcentrateOn.Core.Logic;
 
 public class OnLogic(
   IContextual<Subject> subjectContext
-, IContextual<Day> dayContext
+, IContextual<Day> daysContext
 ) : IOnLogically
 {
-    public async Task<(bool, Subject?)> TryGetExistingAsync(string name)
+    public Task BeginAsync() => Task.WhenAll(
+          subjectContext.InitAsync()
+        , daysContext.InitAsync()
+        );
+
+    public (bool, Subject?) TryGetSubject(string name)
     {
-        var subject = await subjectContext.GetByAsync(name);
+        var subject = subjectContext.TryFind(name);
         
         return (subject is not null, subject);
     }
-    
-    public async Task<Guid> UpdateExistingAsync(Subject existing, OnRequest request)
+
+    public Guid UpdateExistingSubject(Subject existing, OnRequest request)
     {
         var updated = new Subject(
               existing.Id
@@ -25,68 +30,73 @@ public class OnLogic(
             , request.Priority ?? existing.Priority
             , request.During   ?? existing.During
             , request.Duration ?? existing.Duration
-            );
-        await subjectContext.ResolveAsync(updated);
-        
+        );
+        subjectContext.Update(updated);
+
         return updated.Id;
     }
 
-    public async Task<Guid> CreateNewAsync(OnRequest request) 
+    public Guid CreateNewSubject(OnRequest fromRequest)
     {
         var created = new Subject(
               Guid.NewGuid()
-            , request.Name
-            , request.Priority ?? 1
-            , request.During   ?? During.Afternoon
-            , request.Duration ?? "15m"
-        );
-        await subjectContext.ResolveAsync(created);
-        
+            , fromRequest.Name
+            , fromRequest.Priority ?? 1
+            , fromRequest.During   ?? During.Afternoon
+            , fromRequest.Duration ?? "15m"
+            );
+        subjectContext.Create(created);
+
         return created.Id;
     }
 
-    public async Task<List<Day>> AssociateDaysAsync(string days, Guid subjectId)
+    public List<Day> AssociateSubjectToDays(Guid subjectId, List<DayOfWeek> givenDays)
     {
-        var desiredDays = days.Split(',');
         var updatedDays = new List<Day>();
-        var allDays     = await dayContext.GetAllAsync();
-        foreach (var d in desiredDays)
+        foreach (var desired in givenDays)
         {
-            var day = await dayContext.GetByAsync(d);
+            var day = daysContext.TryFind(desired.ToString());
             if (day is not null)
             {
-                // Next we need to check if the given day(s) have this subject
-                // associated.
-                // If they do, no action needed.
-                // If not, we need to at the target's Id
-                // the the list of subject ids.
                 if (!day.SubjectIds.Contains(subjectId))
+                {
                     day.SubjectIds.Add(subjectId);
+                    daysContext.Update(day);
+                }
             }
             else
             {
                 day = new Day(
                       Guid.NewGuid()
-                    , Enum.Parse<DayOfWeek>(d)
+                    , desired
                     , [subjectId]
                     );
+                daysContext.Create(day);
             }
             
-            await dayContext.ResolveAsync(day);
             updatedDays.Add(day);
         }
 
-        var complimentDays = allDays.Subtract(updatedDays);
-        
+        return updatedDays;
+    }
+
+    public List<Day> UnassociateUnwantedDays(Guid subjectId, List<Day> updatedDays)
+    {
+        var complimentDays = daysContext.All()
+            .Subtract(updatedDays)
+            .Where(d => d.SubjectIds.Contains(subjectId))
+            .ToList();
+        foreach (var unassociated in complimentDays)
+        {
+            unassociated.SubjectIds.Remove(subjectId);
+            daysContext.Update(unassociated);
+        }
+
         return complimentDays;
     }
 
-    public async Task RemoveUnwantedDaysAsync(List<Day> complimentDays, Guid subjectId)
-    {
-        foreach (var c in complimentDays)
-        {
-            c.SubjectIds.Remove(subjectId);
-            await dayContext.ResolveAsync(c);
-        }
-    }
+    public Task EndAsync() => Task.WhenAll(
+          subjectContext.SaveAsync()
+        , daysContext.SaveAsync()
+        );
 }

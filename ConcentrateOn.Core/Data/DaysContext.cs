@@ -1,67 +1,48 @@
-using System.Text.Json;
 using ConcentrateOn.Core.Interfaces;
 using ConcentrateOn.Core.Models;
 
 namespace ConcentrateOn.Core.Data;
 
-public class DaysContext(IDataSource source) : IContextual<Day>
+public class DaysContext(IDataSource<Day> daysSource) : IContextual<Day>
 {
-    public async Task<Day?> GetByAsync(Guid id)
+    List<Day> days = [];
+    
+    public async Task InitAsync()
     {
-        var text = await source.ReadAsync();
-        if (string.IsNullOrWhiteSpace(text))
-            return null;
-
-        return JsonSerializer.Deserialize<List<Day>>(text)
-            !.FirstOrDefault(s => s.Id == id);
+        days = await daysSource.ReadAsync();
     }
 
-    public async Task<Day?> GetByAsync(string name)
-    {
-        var text = await source.ReadAsync();
-        if (string.IsNullOrWhiteSpace(text))
-            return null;
+    public List<Day> All() =>
+        days;
 
-        return JsonSerializer.Deserialize<List<Day>>(text)
-            !.FirstOrDefault(d => d.Name == Enum.Parse<DayOfWeek>(name));
+    public Day? TryFind(Guid id) =>
+        days.Find(d => d.Id == id);
+
+    public Day? TryFind(string name) =>
+        days.Find(d => d.Name.ToString() == name);
+
+    public Guid Create(Day toCreate)
+    {
+        days.Add(toCreate);
+
+        return toCreate.Id;
     }
 
-    public async Task<List<Day>> GetAllAsync()
+    public Guid Update(Day toUpdate)
     {
-        var text = await source.ReadAsync();
-        if (string.IsNullOrWhiteSpace(text))
-            return [];
+        var updateIndex   = days.FindIndex(d => d.Id == toUpdate.Id);
+        days[updateIndex] = toUpdate;
 
-        return JsonSerializer.Deserialize<List<Day>>(text)!;
+        return toUpdate.Id;
     }
 
-    public async Task<Guid> ResolveAsync(Day target)
+    public void Remove(Guid id)
     {
-        var allSubjects = await GetAllAsync();
-        var existing    = allSubjects.Find(s => s.Id == target.Id);
-        if (existing is null)
-            allSubjects.Add(target);
-        else
-        {
-            var updated = new Day(
-                  existing.Id
-                , existing.Name
-                , target.SubjectIds
-                );
-            var updateIndex          = allSubjects.FindIndex(s => s.Id == updated.Id);
-            allSubjects[updateIndex] = updated;
-        }
-        
-        await source.WriteAsync(JsonSerializer.Serialize(allSubjects));
-
-        return target.Id;
+        var targetIndex = days.FindIndex(d => d.Id == id);
+        if (targetIndex >= 0)
+            days.RemoveAt(targetIndex);
     }
 
-    public async Task DeleteAsync(Guid id)
-    {
-        var allItems = await GetAllAsync();
-        var target   = allItems.Find(s => s.Id == id);
-        if (target is not null)
-            allItems.Remove(target);
-    }
+    public Task SaveAsync() =>
+        daysSource.WriteAsync(days);
 }

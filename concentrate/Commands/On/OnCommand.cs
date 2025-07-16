@@ -1,5 +1,4 @@
 using System.CommandLine;
-using System.Linq;
 using ConcentrateOn.Core.Enums;
 using ConcentrateOn.Core.Interfaces;
 using ConcentrateOn.Core.Models;
@@ -25,14 +24,22 @@ public class OnCommand(IOnLogically logically) {
 
     async Task OnHandler(ParseResult parsed)
     {
-        var request            = GetRequestParams(parsed);
-        var (exists, existing) = await logically.TryGetExistingAsync(request.Name);
-        var subjectId          = exists? 
-            await logically.UpdateExistingAsync(existing!, request) 
-            : await logically.CreateNewAsync(request);
+        var request = GetRequestParams(parsed);
         
-        var complimentDays = await logically.AssociateDaysAsync(request.Days, subjectId);
-        await logically.RemoveUnwantedDaysAsync(complimentDays, subjectId);
+        await logically.BeginAsync();
+        
+        var (exists, existing) = logically.TryGetSubject(request.Name);
+        var subjectId            = exists? 
+            logically.UpdateExistingSubject(existing!, request) 
+            : logically.CreateNewSubject(request);
+        
+        var updatedDays = logically.AssociateSubjectToDays(
+              subjectId
+            , request.Days?.Split(',').Select(Enum.Parse<DayOfWeek>).ToList() ?? []
+            );
+        var unassociatedDays = logically.UnassociateUnwantedDays(subjectId, updatedDays);
+        
+        await logically.EndAsync();
     }
 
     public Command Create()
