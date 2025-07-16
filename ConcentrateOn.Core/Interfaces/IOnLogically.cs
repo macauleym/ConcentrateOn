@@ -4,7 +4,7 @@ namespace ConcentrateOn.Core.Interfaces;
 
 public interface IOnLogically : ITransactable
 {
-    (bool, Subject?) TryGetSubject(string name);
+    bool TryGetSubject(string name, out Subject subject);
     Guid UpdateExistingSubject(Subject existing, OnRequest request);
     Guid CreateNewSubject(OnRequest fromRequest);
     List<Day> AssociateSubjectToDays(Guid subjectId, List<DayOfWeek> givenDays);

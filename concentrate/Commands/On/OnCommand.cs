@@ -28,9 +28,8 @@ public class OnCommand(IOnLogically logically) {
         
         await logically.BeginAsync();
         
-        var (exists, existing) = logically.TryGetSubject(request.Name);
-        var subjectId            = exists? 
-            logically.UpdateExistingSubject(existing!, request) 
+        var subjectId = logically.TryGetSubject(request.Name, out var existing)
+            ? logically.UpdateExistingSubject(existing, request) 
             : logically.CreateNewSubject(request);
         
         var updatedDays = logically.AssociateSubjectToDays(

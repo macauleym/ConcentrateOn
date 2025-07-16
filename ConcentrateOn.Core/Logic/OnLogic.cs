@@ -15,11 +15,11 @@ public class OnLogic(
         , daysContext.InitAsync()
         );
 
-    public (bool, Subject?) TryGetSubject(string name)
+    public bool TryGetSubject(string name, out Subject subject)
     {
-        var subject = subjectContext.TryFind(name);
+        subject = subjectContext.TryFind(name);
         
-        return (subject is not null, subject);
+        return subject is not null;
     }
 
     public Guid UpdateExistingSubject(Subject existing, OnRequest request)
