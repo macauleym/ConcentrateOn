@@ -26,11 +26,11 @@ public class OnLogicTests
         var testTarget = new OnLogic(subjectContextMock.Object, daysContextMock.Object);
 
         // Act
-        var actual = testTarget.TryGetSubject(name);
+        var actual = testTarget.TryGetSubject(name, out var result);
 
         // Assert
-        actual.Item1.Should().BeTrue();
-        actual.Item2.Should().Be(subject);
+        actual.Should().BeTrue();
+        result.Should().Be(subject);
     }
     
     [Fact]
@@ -46,11 +46,11 @@ public class OnLogicTests
         var testTarget = new OnLogic(subjectContextMock.Object, daysContextMock.Object);
 
         // Act
-        var actual = testTarget.TryGetSubject(name);
+        var actual = testTarget.TryGetSubject(name, out var result);
 
         // Assert
-        actual.Item1.Should().BeFalse();
-        actual.Item2.Should().BeNull();
+        actual.Should().BeFalse();
+        result.Should().BeNull();
     }
 
     [Fact]
@@ -178,33 +178,31 @@ public class OnLogicTests
     {
         // Arrange
         var subjectId = Guid.NewGuid();
-        var complimentDays = new List<Day>
-        { new (Guid.NewGuid(), DayOfWeek.Monday, [subjectId])
-        , new (Guid.NewGuid(), DayOfWeek.Wednesday, [subjectId])
-        };
-        var expectedMonday = complimentDays[0];
-        expectedMonday.SubjectIds.Clear();
-        var expectedWednesday = complimentDays[1];
-        expectedWednesday.SubjectIds.Clear();
+        var monday = new Day(Guid.NewGuid(), DayOfWeek.Monday, [subjectId]);
+        var wednesday = new Day(Guid.NewGuid(), DayOfWeek.Wednesday, [subjectId]);
+        var updatedDays = new List<Day> { monday };
+        var allDays = new List<Day> { monday, wednesday };
+        var expectedWednesday = wednesday with { SubjectIds = [] };
+        var expected = new List<Day> { expectedWednesday };
 
         daysContextMock.Setup(m => m
-            .Update(complimentDays[0]));
+            .All())
+            .Returns(allDays);
         daysContextMock.Setup(m => m
-            .Update(complimentDays[1]));
+            .Update(allDays[0]));
+        daysContextMock.Setup(m => m
+            .Update(allDays[1]));
 
         var testingTarget = new OnLogic(subjectContextMock.Object, daysContextMock.Object);
 
         // Act
-        var actual = testingTarget.UnassociateUnwantedDays(subjectId, complimentDays);
+        var actual = testingTarget.UnassociateUnwantedDays(subjectId, updatedDays);
         
         // Assert
         daysContextMock.Verify(context => context
-            .Update(expectedMonday)
-            , Times.Once);
-        daysContextMock.Verify(context => context
-            .Update(expectedWednesday)
+            .Update(wednesday)
             , Times.Once);
         
-        actual.Should().BeEquivalentTo(complimentDays);
+        actual.Should().BeEquivalentTo(expected);
     }
 }
