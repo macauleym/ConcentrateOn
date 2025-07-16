@@ -1,0 +1,28 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 12.00
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcentrateOn.Core", "ConcentrateOn.Core\ConcentrateOn.Core.csproj", "{FBF5E3C0-516F-4365-83DA-0FA235E59615}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "concentrate", "concentrate\concentrate.csproj", "{2358E185-4068-407C-87FA-FBED5D7BA071}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "ConcentrateOn.Test", "ConcentrateOn.Test\ConcentrateOn.Test.csproj", "{B06CB603-702C-4F98-BB45-611CE16D1189}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{FBF5E3C0-516F-4365-83DA-0FA235E59615}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{FBF5E3C0-516F-4365-83DA-0FA235E59615}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{FBF5E3C0-516F-4365-83DA-0FA235E59615}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{FBF5E3C0-516F-4365-83DA-0FA235E59615}.Release|Any CPU.Build.0 = Release|Any CPU
+		{2358E185-4068-407C-87FA-FBED5D7BA071}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{2358E185-4068-407C-87FA-FBED5D7BA071}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{2358E185-4068-407C-87FA-FBED5D7BA071}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{2358E185-4068-407C-87FA-FBED5D7BA071}.Release|Any CPU.Build.0 = Release|Any CPU
+		{B06CB603-702C-4F98-BB45-611CE16D1189}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{B06CB603-702C-4F98-BB45-611CE16D1189}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{B06CB603-702C-4F98-BB45-611CE16D1189}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{B06CB603-702C-4F98-BB45-611CE16D1189}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal
