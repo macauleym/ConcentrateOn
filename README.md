@@ -103,3 +103,19 @@ concentrate for Thursday
 ```bash
 concentrate for tomorrow
 ```
+
+## Structure
+
+### /concentrate
+
+This is the CLI application that is executed by the user.
+
+### /ConcentrateOn.Core
+
+Contains all of the logical pieces needed to support the application.
+
+Anything from models, to interfaces, to data gathering/saving, etc.
+
+### /ConcentrateOn.Test
+
+Self-explanatory. Contains all of the unit tests for the logical bits of the application.
