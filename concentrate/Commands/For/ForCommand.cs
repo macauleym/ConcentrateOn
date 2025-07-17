@@ -1,4 +1,5 @@
 using System.CommandLine;
+using ConcentrateOn.Core.Extensions;
 using ConcentrateOn.Core.Interfaces;
 using ConcentrateOn.Core.Models;
 
@@ -9,12 +10,9 @@ public class ForCommand(IForLogically logically) {
 
     readonly Argument<string> dayArgument = new("Day");
 
-    ForRequest GetRequestParams(ParseResult parsed)
-    {
-        var day = parsed.GetRequiredValue(dayArgument);
-
-        return new ForRequest(day);
-    }
+    ForRequest GetRequestParams(ParseResult parsed) =>
+        parsed.GetRequiredValue(dayArgument)
+        .PipeTo(d => new ForRequest(d));
 
     async Task ForHandler(ParseResult parsed)
     {
@@ -22,16 +20,17 @@ public class ForCommand(IForLogically logically) {
 
         await logically.BeginAsync();
         
-        var possibleDay = logically.ParsePossibleDayOfWeek(request.Day);
-        if (!possibleDay.HasValue)
+        var possibleDays = logically.ParsePossibleDays(request.Day);
+        if (possibleDays.Count <= 0)
         {
-            Console.WriteLine($"Can't attempt to get subjects for day that cannot be mapped.\nGiven value {request.Day}.\nExpected a valid day of the week, or one of 'today', 'yesterday', or 'tomorrow'.");
+            Console.WriteLine($"Can't attempt to get subjects for day that cannot be mapped.\nGiven value {request.Day}.\nExpected a valid day of the week, or one of 'today', 'yesterday', 'tomorrow', or 'week'.");
             return;
         }
 
-        var desiredDay = logically.GetDayByName(possibleDay);
-        Console.WriteLine(
-             logically.ComposeDaySubjectsString(desiredDay));
+        foreach (var day in possibleDays)
+            logically.GetDayByName(day)
+            .PipeTo(logically.ComposeDaySubjectsString)
+            .PipeTo(Console.WriteLine);
 
         await logically.EndAsync();
     }

@@ -4,7 +4,7 @@ namespace ConcentrateOn.Core.Interfaces;
 
 public interface IForLogically : ITransactable
 {
-    DayOfWeek? ParsePossibleDayOfWeek(string requested);
+    List<DayOfWeek> ParsePossibleDays(string requested);
     Day? GetDayByName(DayOfWeek? possibleDay);
     string ComposeDaySubjectsString(Day? desiredDay);
 }

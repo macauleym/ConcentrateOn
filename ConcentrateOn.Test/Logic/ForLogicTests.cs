@@ -22,10 +22,10 @@ public class ForLogicTests
         var testTarget = new ForLogic(subjectContextMock.Object, daysContextMock.Object);
         
         // Act
-        var actual = testTarget.ParsePossibleDayOfWeek(day);
+        var actual = testTarget.ParsePossibleDays(day);
         
         // Assert
-        actual.Should().Be(expected);
+        actual.Should().BeEquivalentTo([expected]);
     }
 
     [Fact]
@@ -33,15 +33,15 @@ public class ForLogicTests
     {
         // Arrange
         var day      = "tomorrow";
-        var expected = DateTime.Now.AddDays(1).DayOfWeek;
+        var expected = DateTime.Now.AddDays(+1).DayOfWeek;
 
         var testTarget = new ForLogic(subjectContextMock.Object, daysContextMock.Object);
         
         // Act
-        var actual = testTarget.ParsePossibleDayOfWeek(day);
+        var actual = testTarget.ParsePossibleDays(day);
         
         // Assert
-        actual.Should().Be(expected);
+        actual.Should().BeEquivalentTo([expected]);
     }
     
     [Fact]

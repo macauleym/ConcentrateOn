@@ -16,23 +16,31 @@ public class ForLogic(
     , dayContext.InitAsync()
     );
 
-  public DayOfWeek? ParsePossibleDayOfWeek(string requested)
+  public List<DayOfWeek> ParsePossibleDays(string requested)
   {
-    if (!Enum.TryParse(requested, out DayOfWeek desiredDay))
-    {
-      desiredDay = requested switch
-      { "today"     => DateTime.Now.DayOfWeek
-      , "yesterday" => DateTime.Now.AddDays(-1).DayOfWeek
-      , "tomorrow"  => DateTime.Now.AddDays(+1).DayOfWeek
-      , _           => throw new ArgumentOutOfRangeException(nameof(requested), requested, "Given value for 'day' not valid. Must be one of a day of the week, or one of 'today', 'tomorrow', 'yesterday'.")
-      };
-    }
+    if (Enum.TryParse(requested, out DayOfWeek desiredDay))
+      return [desiredDay];
 
-    return desiredDay;
+    List<DayOfWeek> desiredDays = requested switch
+    { "today"     => [DateTime.Now.DayOfWeek]
+    , "yesterday" => [DateTime.Now.AddDays(-1).DayOfWeek]
+    , "tomorrow"  => [DateTime.Now.AddDays(+1).DayOfWeek]
+    , "week"      => [DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday]
+    , _           => throw new ArgumentOutOfRangeException(nameof(requested), requested, "Given value for 'day' not valid. Must be one of a day of the week, or one of 'today', 'tomorrow', 'yesterday'.")
+    };
+    
+    return desiredDays;
   }
 
   public Day? GetDayByName(DayOfWeek? possibleDay) =>
     dayContext.TryFind(possibleDay?.ToString() ?? string.Empty);
+
+  static string FillSpace(int count) =>
+    count > 0 
+      ? Enumerable.Range(0, count-1)
+        .Select(_ => ".")
+        .Aggregate(string.Empty, (acc, str) => acc+str) 
+      : string.Empty;
   
   public string ComposeDaySubjectsString(Day? desiredDay)
   {
@@ -41,12 +49,31 @@ public class ForLogic(
     if (desiredDay is not null
     && desiredDay.SubjectIds.Count > 0)
     {
-      subjectsBuilder.AppendLine($"Desired Subjects for {desiredDay.Name}");
-      for (var i = 0; i < desiredDay.SubjectIds.Count; i++)
+      subjectsBuilder.Append($"Desired Subjects for {desiredDay.Name}");
+      subjectsBuilder.AppendLine(desiredDay.Name == DateTime.Now.DayOfWeek 
+        ? "    <<== TODAY"
+        : string.Empty);
+
+      var subjects = desiredDay.SubjectIds
+        .Select(subjectContext.TryFind)
+        .Where(s => s is not null)
+        .ToList();
+      var longestName = subjects
+        .MaxBy(s => s!.Name.Length)!
+        .Name.Length;
+      for (var i = 0; i < subjects.Count; i++)
       {
-        var subject = subjectContext.TryFind(desiredDay.SubjectIds[i]);
-        if (subject is not null)
-          subjectsBuilder.AppendLine($"\t{i + 1}. {subject.Name} - {subject.During}, {subject.Duration}");
+        var subject = subjects[i];
+        if (subject is null)
+          continue;
+        
+        subjectsBuilder.Append($"\t{i + 1}. ");
+        subjectsBuilder.Append($"{subject.Name} ");
+        if (subject.Name.Length != longestName)
+          subjectsBuilder.Append(FillSpace(longestName - subject.Name.Length) + ' ');
+        
+        subjectsBuilder.Append($"- {subject.During}, {subject.Duration}");
+        subjectsBuilder.AppendLine();
       }
     }
     else 
