@@ -32,13 +32,13 @@ Subject
 
 &nbsp;&nbsp;&nbsp;&nbsp;The comma (',') delimited list of days of the week to associate the given subject to.
 
---during
+-d/--during
 
 &nbsp;&nbsp;&nbsp;&nbsp;The relative time of day you want to try and focus on the subject.
 
 &nbsp;&nbsp;&nbsp;&nbsp;Valid values are 'morning', 'afternoon', and 'night'.
 
---duration
+-t/--duration
 
 &nbsp;&nbsp;&nbsp;&nbsp;A string representing how long you want to spend on the subject.
 
@@ -46,7 +46,7 @@ Subject
 
 &nbsp;&nbsp;&nbsp;&nbsp;Some valid options could be: "15m", "2h", "3 hours", "45 seconds", "a decent amount of time", "at least a couple minutes, but no more than like 12", etc.
 
---priority
+-p/--priority
 
 &nbsp;&nbsp;&nbsp;&nbsp;An integer value to help sort a Subject, and to list which ones the user wishes to focus on above others.
 

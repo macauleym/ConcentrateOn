@@ -10,9 +10,9 @@ public class OnCommand(IOnLogically logically) {
 
     readonly Argument<string> subjectArgument = new("Subject");
     readonly Option<string> daysOption        = new("Days", "--days");
-    readonly Option<During> duringOption      = new("During", "--during");
-    readonly Option<string> durationOption    = new("Duration", "--duration");
-    readonly Option<int> priorityOption       = new("Priority", "--priority");
+    readonly Option<During> duringOption      = new("During", "--during", "-d");
+    readonly Option<string> durationOption    = new("Duration", "--duration", "-t");
+    readonly Option<int> priorityOption       = new("Priority", "--priority", "-p");
 
     OnRequest GetRequestParams(ParseResult parsed) =>
         new ( parsed.GetRequiredValue(subjectArgument)
