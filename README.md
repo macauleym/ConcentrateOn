@@ -104,6 +104,12 @@ concentrate for Thursday
 concentrate for tomorrow
 ```
 
+Or for every day of the week
+
+```bash
+concentrate for week
+```
+
 ## Structure
 
 ### /concentrate
