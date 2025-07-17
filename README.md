@@ -14,6 +14,12 @@ The overall goal of this project is to be a very light-weight application to tra
 
 This is not meant to be a to-do application, the goal is a much higher abstraction. It's not meant to track time (though you can mark a desired time you want to focus on something), nor to mark things as "done". It is only for keeping track of the things you want to keep focus on for each day.
 
+I had the idea for this when I wanted to keep track, at a high-level, the subjects/concepts that I wanted to learn more about or work on. 
+I didn't want to use a calender app or anything that is used to track time discretely. 
+Rather, I just wanted something that I could use to more as a general reminder application.
+Once I started typing what I wanted into a new file, to try to track at the level I was looking for, it seemed like a good project to build. 
+Low complexity and something that I would actively use myself.
+
 ## Commands
 
 ### On
