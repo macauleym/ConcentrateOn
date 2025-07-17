@@ -32,8 +32,6 @@ Subject
 
 &nbsp;&nbsp;&nbsp;&nbsp;An integer value to help sort a Subject, and to list which ones the user wishes to focus on above others.
 
-&nbsp;&nbsp;&nbsp;&nbsp;Valid values are the individual days of the week, as well as the relativistic values 'yesterday', 'today', and 'tomorrow'.
-
 --days [required, unless passing -r/--forget]
 
 &nbsp;&nbsp;&nbsp;&nbsp;The comma (',') delimited list of days of the week to associate the given subject to.
@@ -66,6 +64,8 @@ Subject
 Day
 
 &nbsp;&nbsp;&nbsp;&nbsp;The given day to display all the associated subject for.
+
+&nbsp;&nbsp;&nbsp;&nbsp;Valid values are the individual days of the week, as well as the relativistic values 'yesterday', 'today', 'tomorrow', and 'week'.
 
 ## Examples
 
