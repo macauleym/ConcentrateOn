@@ -7,7 +7,7 @@ namespace ConcentrateOn.Core.Logic;
 public class ForLogic(
   IContextual<Subject> subjectContext
 , IContextual<Day> dayContext
-) : IForLogically 
+) : IForLogically
 {
   const string OUTPUT_SEPERATOR = "*****************************";
 
@@ -25,10 +25,18 @@ public class ForLogic(
     { "today"     => [DateTime.Now.DayOfWeek]
     , "yesterday" => [DateTime.Now.AddDays(-1).DayOfWeek]
     , "tomorrow"  => [DateTime.Now.AddDays(+1).DayOfWeek]
-    , "week"      => [DayOfWeek.Sunday, DayOfWeek.Monday, DayOfWeek.Tuesday, DayOfWeek.Wednesday, DayOfWeek.Thursday, DayOfWeek.Friday, DayOfWeek.Saturday]
-    , _           => throw new ArgumentOutOfRangeException(nameof(requested), requested, "Given value for 'day' not valid. Must be one of a day of the week, or one of 'today', 'tomorrow', 'yesterday'.")
+    , "week"      => [ DayOfWeek.Sunday
+                     , DayOfWeek.Monday
+                     , DayOfWeek.Tuesday
+                     , DayOfWeek.Wednesday
+                     , DayOfWeek.Thursday
+                     , DayOfWeek.Friday
+                     , DayOfWeek.Saturday
+                     ]
+    , _           => throw new ArgumentOutOfRangeException(nameof(requested), requested, 
+      "Given value for 'day' not valid. Must be one of a day of the week, or one of 'today', 'tomorrow', 'yesterday'.")
     };
-    
+
     return desiredDays;
   }
 
@@ -36,12 +44,25 @@ public class ForLogic(
     dayContext.TryFind(possibleDay?.ToString() ?? string.Empty);
 
   static string FillSpace(int count) =>
-    count > 0 
-      ? Enumerable.Range(0, count-1)
+    count > 0
+      ? Enumerable.Range(0, count - 1)
         .Select(_ => ".")
-        .Aggregate(string.Empty, (acc, str) => acc+str) 
+        .Aggregate(string.Empty, (acc, str) => acc + str)
       : string.Empty;
-  
+
+  static StringBuilder AppendSubjectLine(Subject toPrint, int longestName, StringBuilder builder)
+  {
+    builder.Append($"\t{toPrint.Priority}. ");
+    builder.Append($"{toPrint.Name} ");
+    if (toPrint.Name.Length != longestName)
+      builder.Append(FillSpace(longestName - toPrint.Name.Length) + ' ');
+
+    builder.Append($"- {toPrint.During}, {toPrint.Duration}");
+    builder.AppendLine();
+
+    return builder;
+  }
+
   public string ComposeDaySubjectsString(Day? desiredDay)
   {
     var subjectsBuilder = new StringBuilder();
@@ -50,33 +71,27 @@ public class ForLogic(
     && desiredDay.SubjectIds.Count > 0)
     {
       subjectsBuilder.Append($"Desired Subjects for {desiredDay.Name}");
-      subjectsBuilder.AppendLine(desiredDay.Name == DateTime.Now.DayOfWeek 
-        ? "    <<== TODAY"
-        : string.Empty);
+      subjectsBuilder.AppendLine(
+        desiredDay.Name == DateTime.Now.DayOfWeek
+        && desiredDay.SubjectIds.Count > 1 
+          ? "    <<== TODAY"
+          : string.Empty
+          );
 
       var subjects = desiredDay.SubjectIds
         .Select(subjectContext.TryFind)
         .Where(s => s is not null)
+        .OfType<Subject>()
+        .OrderBy(s => s.Priority)
         .ToList();
       var longestName = subjects
-        .MaxBy(s => s!.Name.Length)!
+        .MaxBy(s => s.Name.Length)!
         .Name.Length;
-      for (var i = 0; i < subjects.Count; i++)
-      {
-        var subject = subjects[i];
-        if (subject is null)
-          continue;
-        
-        subjectsBuilder.Append($"\t{i + 1}. ");
-        subjectsBuilder.Append($"{subject.Name} ");
-        if (subject.Name.Length != longestName)
-          subjectsBuilder.Append(FillSpace(longestName - subject.Name.Length) + ' ');
-        
-        subjectsBuilder.Append($"- {subject.During}, {subject.Duration}");
-        subjectsBuilder.AppendLine();
-      }
+      subjectsBuilder = subjects
+        .Aggregate(subjectsBuilder, (current, subject) =>
+          AppendSubjectLine(subject, longestName, current));
     }
-    else 
+    else
       subjectsBuilder.AppendLine("<< No subjects for this day >>");
 
     subjectsBuilder.AppendLine(OUTPUT_SEPERATOR);
