@@ -28,7 +28,13 @@ Subject
 
 #### Options
 
---days
+-p/--priority
+
+&nbsp;&nbsp;&nbsp;&nbsp;An integer value to help sort a Subject, and to list which ones the user wishes to focus on above others.
+
+&nbsp;&nbsp;&nbsp;&nbsp;Valid values are the individual days of the week, as well as the relativistic values 'yesterday', 'today', and 'tomorrow'.
+
+--days [required, unless passing -r/--forget]
 
 &nbsp;&nbsp;&nbsp;&nbsp;The comma (',') delimited list of days of the week to associate the given subject to.
 
@@ -46,11 +52,12 @@ Subject
 
 &nbsp;&nbsp;&nbsp;&nbsp;Some valid options could be: "15m", "2h", "3 hours", "45 seconds", "a decent amount of time", "at least a couple minutes, but no more than like 12", etc.
 
--p/--priority
+-r/--forget [required, unless passing --days]
 
-&nbsp;&nbsp;&nbsp;&nbsp;An integer value to help sort a Subject, and to list which ones the user wishes to focus on above others.
+&nbsp;&nbsp;&nbsp;&nbsp;Tells the application to remove the given subject from all associated days 
 
-&nbsp;&nbsp;&nbsp;&nbsp;Valid values are the individual days of the week, as well as the relativistic values 'yesterday', 'today', and 'tomorrow'.
+&nbsp;&nbsp;&nbsp;&nbsp;If it exists, and is associated with any days.
+
 
 ### for
 
@@ -79,6 +86,12 @@ concentrate on drawing \
   --days Monday,Friday,Saturday \
   --duration 30m \
   --priority 3
+```
+
+To remove a subject association from all days.
+
+```bash
+concentrate on building --forget
 ```
 
 To grab the list of subjects for a given day.

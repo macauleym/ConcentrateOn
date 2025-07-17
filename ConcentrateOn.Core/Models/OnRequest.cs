@@ -8,4 +8,5 @@ public record OnRequest(
 , During? During
 , string? Duration
 , string? Days
+, bool? IsForget 
 );

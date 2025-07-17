@@ -9,10 +9,11 @@ public class OnCommand(IOnLogically logically) {
     public const string Name = "on";
 
     readonly Argument<string> subjectArgument = new("Subject");
+    readonly Option<int> priorityOption       = new("Priority", "--priority", "-p");
     readonly Option<string> daysOption        = new("Days", "--days");
     readonly Option<During> duringOption      = new("During", "--during", "-d");
     readonly Option<string> durationOption    = new("Duration", "--duration", "-t");
-    readonly Option<int> priorityOption       = new("Priority", "--priority", "-p");
+    readonly Option<bool> forgetOption        = new("Forget", "--forget", "-r");
 
     OnRequest GetRequestParams(ParseResult parsed) =>
         new ( parsed.GetRequiredValue(subjectArgument)
@@ -20,8 +21,9 @@ public class OnCommand(IOnLogically logically) {
             , parsed.GetValue(duringOption)
             , parsed.GetValue(durationOption)
             , parsed.GetValue(daysOption)
+            , parsed.GetValue(forgetOption)
             );
-
+    
     async Task OnHandler(ParseResult parsed)
     {
         var request = GetRequestParams(parsed);
@@ -31,11 +33,23 @@ public class OnCommand(IOnLogically logically) {
         var subjectId = logically.TryGetSubject(request.Name, out var existing)
             ? logically.UpdateExistingSubject(existing, request) 
             : logically.CreateNewSubject(request);
-        
-        var updatedDays = logically.AssociateSubjectToDays(
-              subjectId
-            , request.Days?.Split(',').Select(Enum.Parse<DayOfWeek>).ToList() ?? []
-            );
+
+        var associatedDays = new List<DayOfWeek>();
+        try
+        {
+            associatedDays = logically.ValidateAssociations(request.Days, request.IsForget);
+        }
+        catch (Exception e)
+        {
+            await Console.Error.WriteLineAsync(e.Message);
+            return;
+        }
+        finally
+        {
+            await logically.EndAsync();
+        }
+
+        var updatedDays      = logically.AssociateSubjectToDays(subjectId, associatedDays);
         var unassociatedDays = logically.UnassociateUnwantedDays(subjectId, updatedDays);
         
         await logically.EndAsync();
@@ -49,6 +63,7 @@ public class OnCommand(IOnLogically logically) {
         on.Options.Add(duringOption);
         on.Options.Add(durationOption);
         on.Options.Add(priorityOption);
+        on.Options.Add(forgetOption);
         on.SetAction(OnHandler);
 
         return on;

@@ -49,7 +49,21 @@ public class OnLogic(
 
         return created.Id;
     }
+    
+    public List<DayOfWeek> ValidateAssociations(string? requestDays, bool? isForget)
+    {
+        if (isForget.HasValue 
+            && isForget.Value)
+            return [];
 
+        if (requestDays is null)
+            throw new InvalidOperationException("Must provide at least one day to associate the subject to!");
+
+        return requestDays
+            .Split(',')
+            .Select(Enum.Parse<DayOfWeek>).ToList();
+    }
+    
     public List<Day> AssociateSubjectToDays(Guid subjectId, List<DayOfWeek> givenDays)
     {
         var updatedDays = new List<Day>();

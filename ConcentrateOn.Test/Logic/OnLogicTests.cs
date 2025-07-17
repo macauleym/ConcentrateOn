@@ -58,7 +58,7 @@ public class OnLogicTests
     {
         // Arrange
         var guid     = Guid.NewGuid();
-        var request  = new OnRequest("unused", 2, During.Night, "2h", "Monday,Wednesday");
+        var request  = new OnRequest("unused", 2, During.Night, "2h", "Monday,Wednesday", false);
         var existing = new Subject(guid, "Testing", 0, During.Afternoon, "5m");
         var updated  = new Subject(guid, "Testing", 2, During.Night, "2h");
 
@@ -84,7 +84,7 @@ public class OnLogicTests
     {
         // Arrange
         var guid     = Guid.NewGuid();
-        var request  = new OnRequest("unused", 2, During.Night, "2h", "Monday,Wednesday");
+        var request  = new OnRequest("unused", 2, During.Night, "2h", "Monday,Wednesday", false);
         var created  = new Subject(guid, "Testing", 2, During.Night, "2h");
 
         subjectContextMock.Setup(m => m
