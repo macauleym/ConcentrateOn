@@ -73,7 +73,6 @@ public class ForLogic(
       subjectsBuilder.Append($"Desired Subjects for {desiredDay.Name}");
       subjectsBuilder.AppendLine(
         desiredDay.Name == DateTime.Now.DayOfWeek
-        && desiredDay.SubjectIds.Count > 1 
           ? "    <<== TODAY"
           : string.Empty
           );
